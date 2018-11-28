@@ -7,6 +7,7 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 enum cjson_type {
     CJSON_NUMBER,
@@ -14,6 +15,10 @@ enum cjson_type {
     CJSON_BOOLEAN,
     CJSON_SET,
     CJSON_OBJECT
+};
+
+enum cjson_error{
+    CJSON_ERROR_FORMAT
 };
 
 //基本类型的抽象
@@ -57,7 +62,7 @@ typedef struct {
     int length;
 } cjson_object_t;
 
-extern int json_decode(const char *json_string, cjson_item_t *json_object);
+extern int cjson_decode(const char *json_string, cjson_item_t *json_object);
 
 #ifdef __cplusplus
 }
