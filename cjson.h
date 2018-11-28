@@ -4,6 +4,10 @@
 extern "C" {
 #endif
 
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
 enum cjson_type {
     CJSON_NUMBER,
     CJSON_STRING,
@@ -53,7 +57,7 @@ typedef struct {
     int length;
 } cjson_object_t;
 
-
+extern int json_decode(const char *json_string, cjson_item_t *json_object);
 
 #ifdef __cplusplus
 }
