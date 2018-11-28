@@ -42,12 +42,14 @@ static cjson_return_code_t cjson_read_boolean(const char *json_string, int *json
     if('t' == *(json_string + *json_string_cursor)) {
         if(!memcmp(json_string + *json_string_cursor), "true", sizeof(char) * 4)) {
             data_p->data = 1;
+            *(json_string_cursor) += 4;
         } else {
             error_code = 1;
         }
     } else {
         if(!memcmp(json_string + *json_string_cursor), "false", sizeof(char) * 5)) {
             data_p->data = 0;
+            *(json_string_cursor) += 5;
         } else {
             error_code = 1;
         }
@@ -62,6 +64,18 @@ static cjson_return_code_t cjson_read_boolean(const char *json_string, int *json
         return CJSON_OK;
     }
 }
+
+static cjson_return_code_t cjson_read_null(const char *json_string, int *json_string_cursor, cjson_item_t *result) {
+    if(!memcmp(json_string + *json_string_cursor, "null", 4 * sizeof(char))) {
+        result->type = CJSON_NULL;
+        *json_string_cursor += 4;
+        return CJSON_OK;
+    } else {
+        return CJSON_ERROR_FORMAT;
+    }
+} 
+
+
 
 extern int cjson_decode(const char *json_string, cjson_item_t *json_object) {
 
