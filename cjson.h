@@ -17,9 +17,10 @@ enum cjson_type {
     CJSON_OBJECT
 };
 
-enum cjson_error{
+typedef enum cjson_return_code_t{
+    CJSON_OK,
     CJSON_ERROR_FORMAT
-};
+} cjson_return_code_t;
 
 //基本类型的抽象
 typedef struct cjson_item_t {

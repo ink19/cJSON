@@ -1,6 +1,6 @@
 #include "cjson.h"
 
-static int cjson_read_number(const char *json_string, int *json_string_cursor, cjson_item_t *result) {
+static cjson_return_code_t cjson_read_number(const char *json_string, int *json_string_cursor, cjson_item_t *result) {
     cjson_number_t *data_p = (cjson_number_t *)malloc(sizeof(cjson_number_t));
     char temp_c;
     long long data_integer = 0;
@@ -33,10 +33,35 @@ static int cjson_read_number(const char *json_string, int *json_string_cursor, c
     
     result->data_p = data_p;
     result->type = CJSON_NUMBER;
-    return 0;
+    return CJSON_OK;
 }
 
+static cjson_return_code_t cjson_read_boolean(const char *json_string, int *json_string_cursor, cjson_item_t *result){
+    cjson_boolean_t *data_p = (cjson_number_t *)malloc(sizeof(cjson_number_t));
+    int error_code = 0;
+    if('t' == *(json_string + *json_string_cursor)) {
+        if(!memcmp(json_string + *json_string_cursor), "true", sizeof(char) * 4)) {
+            data_p->data = 1;
+        } else {
+            error_code = 1;
+        }
+    } else {
+        if(!memcmp(json_string + *json_string_cursor), "false", sizeof(char) * 5)) {
+            data_p->data = 0;
+        } else {
+            error_code = 1;
+        }
+    }
 
+    if(error_code) {
+        free(data_p);
+        return CJSON_ERROR_FORMAT;
+    } else {
+        result->data_p = (void *)data_p;
+        result->type = CJSON_BOOLEAN;
+        return CJSON_OK;
+    }
+}
 
 extern int cjson_decode(const char *json_string, cjson_item_t *json_object) {
 
