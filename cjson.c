@@ -40,14 +40,14 @@ static cjson_return_code_t cjson_read_boolean(const char *json_string, int *json
     cjson_boolean_t *data_p = (cjson_number_t *)malloc(sizeof(cjson_number_t));
     int error_code = 0;
     if('t' == *(json_string + *json_string_cursor)) {
-        if(!memcmp(json_string + *json_string_cursor), "true", sizeof(char) * 4)) {
+        if(!memcmp((json_string + *json_string_cursor), "true", sizeof(char) * 4)) {
             data_p->data = 1;
             *(json_string_cursor) += 4;
         } else {
             error_code = 1;
         }
     } else {
-        if(!memcmp(json_string + *json_string_cursor), "false", sizeof(char) * 5)) {
+        if(!memcmp((json_string + *json_string_cursor), "false", sizeof(char) * 5)) {
             data_p->data = 0;
             *(json_string_cursor) += 5;
         } else {
@@ -75,8 +75,56 @@ static cjson_return_code_t cjson_read_null(const char *json_string, int *json_st
     }
 } 
 
+static cjson_return_code_t cjson_read_string_escape(char *string_unescape) {
+    int loop_i, loop_j;
+    loop_i = loop_j = 0;
+    while(*(loop_i + string_unescape)) {
+        if(*(loop_i + string_unescape) == '\\') {
+            switch(*(loop_i + string_unescape + 1)) {
+                case 'a': *(loop_i + string_unescape + 1) = '\a'; break;
+                case 'b': *(loop_i + string_unescape + 1) = '\b'; break;
+                case 'f': *(loop_i + string_unescape + 1) = '\f'; break;
+                case 'n': *(loop_i + string_unescape + 1) = '\n'; break;
+                case 'r': *(loop_i + string_unescape + 1) = '\r'; break;
+                case 't': *(loop_i + string_unescape + 1) = '\t'; break;
+                case '\\': *(loop_i + string_unescape + 1) = '\\'; break;
+                case '"': *(loop_i + string_unescape + 1) = '"'; break;
+                default: goto escape_not_match; 
+            }
+            loop_i++;
+        }
+        escape_not_match:;
+        *(string_unescape + loop_j) = *(loop_i + string_unescape);
+        loop_i++;
+        loop_j++;
+    }
+    string_unescape[loop_j] = 0;
+    return CJSON_OK;
+}
 
+static cjson_return_code_t cjson_read_string(const char *json_string, int *json_string_cursor, cjson_item_t *result) {
+    int string_length;
+    cjson_string_t *data_p = (cjson_string_t *) malloc(sizeof(cjson_string_t));
+    char *temp_string;
+    ++(*json_string_cursor);
+    while(*(string_length + json_string + *json_string_cursor) != '"') {
+        if(*(string_length + json_string + *json_string_cursor) == '\\') {
+            string_length++;
+        }
+        string_length++;
+    }
+
+    temp_string = (char *)malloc(sizeof(char) * (string_length + 1));
+    memcpy(temp_string, json_string + *json_string_cursor, sizeof(char) * string_length);
+    temp_string[string_length] = 0;
+    cjson_read_string_escape(temp_string);
+    data_p->data = temp_string;
+    data_p->length = strlen(temp_string);
+    result->data_p = (void *)data_p;
+    result->type = CJSON_STRING;
+    return CJSON_OK;
+}
 
 extern int cjson_decode(const char *json_string, cjson_item_t *json_object) {
 
-}
+} 
