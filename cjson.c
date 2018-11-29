@@ -1,5 +1,7 @@
 #include "cjson.h"
 
+static cjson_return_code_t cjson_read_begin(const char *json_string, int *json_string_cursor, cjson_item_t *result);
+
 static cjson_return_code_t cjson_read_number(const char *json_string, int *json_string_cursor, cjson_item_t *result) {
     cjson_number_t *data_p = (cjson_number_t *)malloc(sizeof(cjson_number_t));
     char temp_c;
@@ -113,7 +115,7 @@ static cjson_return_code_t cjson_read_string(const char *json_string, int *json_
         }
         string_length++;
     }
-
+    *json_string_cursor += string_length + 1;
     temp_string = (char *)malloc(sizeof(char) * (string_length + 1));
     memcpy(temp_string, json_string + *json_string_cursor, sizeof(char) * string_length);
     temp_string[string_length] = 0;
@@ -123,6 +125,15 @@ static cjson_return_code_t cjson_read_string(const char *json_string, int *json_
     result->data_p = (void *)data_p;
     result->type = CJSON_STRING;
     return CJSON_OK;
+}
+
+static cjson_return_code_t cjson_read_set(const char *json_string, int *json_string_cursor, cjson_item_t *result);
+
+static cjson_return_code_t cjson_read_object(const char *json_string, int *json_string_cursor, cjson_item_t *result);
+
+static cjson_return_code_t cjson_read_begin(const char *json_string, int *json_string_cursor, cjson_item_t* result) {
+    while(isspace(*(json_string + *json_string_cursor))) ++(*json_string_cursor);
+    
 }
 
 extern int cjson_decode(const char *json_string, cjson_item_t *json_object) {

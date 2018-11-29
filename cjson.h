@@ -8,6 +8,7 @@ extern "C" {
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+#include <ctype.h>
 
 enum cjson_type {
     CJSON_NUMBER,
