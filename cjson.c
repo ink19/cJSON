@@ -7,6 +7,13 @@ static cjson_return_code_t cjson_read_number(const char *json_string, int *json_
     char temp_c;
     long long data_integer = 0;
     int data_dot = 0;
+    int is_negative = 0;
+
+    if(*(*json_string_cursor + json_string) == '-') {
+        is_negative = 1;
+        ++(*json_string_cursor);
+    }  
+
     data_p->type = 0;
     while(1) {
         temp_c = *(json_string + *json_string_cursor);
@@ -25,7 +32,7 @@ static cjson_return_code_t cjson_read_number(const char *json_string, int *json_
     }
 
     --(*json_string_cursor);
-
+    if(is_negative) data_integer = -data_integer;
     if(data_dot) {
         data_dot = pow(10, data_dot);
         data_p->data.cjson_number_double = data_integer/(double)data_dot;
@@ -132,8 +139,17 @@ static cjson_return_code_t cjson_read_set(const char *json_string, int *json_str
 static cjson_return_code_t cjson_read_object(const char *json_string, int *json_string_cursor, cjson_item_t *result);
 
 static cjson_return_code_t cjson_read_begin(const char *json_string, int *json_string_cursor, cjson_item_t* result) {
+    cjson_return_code_t return_code;
     while(isspace(*(json_string + *json_string_cursor))) ++(*json_string_cursor);
-    
+    switch(*(json_string + *json_string_cursor)) {
+        case '"': return_code = cjson_read_string(json_string, json_string_cursor, result); break;
+        case 'n': return_code = cjson_read_null(json_string, json_string_cursor, result); break;
+        case 't':
+        case 'f': return_code = cjson_read_boolean(json_string, json_string_cursor, result); break;
+        case '[': return_code = cjson_read_set(json_string, json_string_cursor, result); break;
+        case '{': return_code = cjson_read_object(json_string, json_string_cursor, result); break;
+        default : return_code = cjson_read_number(json_string, json_string_cursor, result); break;
+    }
 }
 
 extern int cjson_decode(const char *json_string, cjson_item_t *json_object) {
