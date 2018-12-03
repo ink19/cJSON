@@ -193,9 +193,64 @@ static cjson_return_code_t cjson_read_set(const char *json_string, int *json_str
 
 static cjson_return_code_t cjson_read_object(const char *json_string, int *json_string_cursor, cjson_item_t *result) {
     cjson_return_code_t return_code = CJSON_OK;
+    cjson_item_t *temp_item;
+    // 初始化object的类型
     cjson_item_t *key_head = (cjson_item_t *)malloc(sizeof(cjson_item_t));
     cjson_item_t *value_head = (cjson_item_t *) malloc(sizeof(cjson_item_t));
-    
+    cjson_object_t *object_object = (cjson_object_t *)malloc(sizeof(cjson_object_t));
+    object_object->key = key_head;
+    object_object->value = value_head;
+    key_head->type = CJSON_HEAD;
+    value_head->type = CJSON_HEAD;
+    key_head->next = NULL;
+    value_head->next = NULL;
+    //返回结果
+    result->type = CJSON_OBJECT;
+    result->data_p = (void *) object_object;
+
+    //跳过object的开始{
+    ++(*json_string_cursor);
+    while(1) {
+        //获取key，key只能为STRING类型
+        temp_item = (cjson_item_t *)malloc(sizeof(cjson_item_t));
+        cjson_read_begin(json_string, json_string_cursor, temp_item);
+        if(temp_item->type != CJSON_STRING) {
+            printf("error: key is not string %d\n", temp_item->type);
+            return_code = CJSON_ERROR_FORMAT;
+            break;
+        }
+        temp_item->next = key_head->next;
+        key_head->next = temp_item;
+        
+        //判断下一个字符是否为:
+        while(isspace(*(json_string + *json_string_cursor))) ++(*json_string_cursor);
+        if(*(json_string + *json_string_cursor) != ':') {
+            return_code = CJSON_ERROR_FORMAT;
+            printf("error: %d\n", temp_item->type);
+            break;
+        }
+        ++(*json_string_cursor);
+        
+        //获取value
+        temp_item = (cjson_item_t *) malloc(sizeof(cjson_item_t));
+        cjson_read_begin(json_string, json_string_cursor, temp_item);
+        temp_item->next = value_head->next;
+        value_head->next = temp_item;
+
+        //判断下一个字符是否为,
+        while(isspace(*(json_string + *json_string_cursor))) ++(*json_string_cursor);
+        if(*(json_string + *json_string_cursor) == ',') {
+            continue;
+        }
+        if(*(json_string + *json_string_cursor) == '}') {
+            ++(*json_string_cursor);
+            //printf("end\n");
+            break;
+        }
+        return_code = CJSON_ERROR_FORMAT;
+        break;
+    }
+    return return_code;
 }
 
 static cjson_return_code_t cjson_read_begin(const char *json_string, int *json_string_cursor, cjson_item_t* result) {
@@ -226,7 +281,24 @@ static int cjson_print_set(cjson_item_t *json_object, int tab) {
     while(json_object!= NULL) {
         for(loop_i = 0; loop_i < tab; ++loop_i) printf("  ");
         cjson_print_data(json_object, tab);
+        printf("\n");
         json_object = json_object->next;
+    }
+    return 0;
+}
+
+static int cjson_print_object(cjson_object_t *json_object, int tab) {
+    int loop_i;
+    cjson_item_t *key_head = json_object->key->next;
+    cjson_item_t *value_head = json_object->value->next;
+    while(key_head != NULL) {
+        for(loop_i = 0; loop_i < tab; ++loop_i) printf("  ");
+        cjson_print_data(key_head, tab);
+        printf(" -> ");
+        cjson_print_data(value_head, tab);
+        printf("\n");
+        key_head = key_head->next;
+        value_head = value_head->next;
     }
     return 0;
 }
@@ -235,24 +307,29 @@ extern int cjson_print_data(cjson_item_t *json_object, int tab) {
     switch(json_object->type) {
         case CJSON_BOOLEAN:
             printf("boolean: ");
-            printf(((cjson_boolean_t *)(json_object->data_p))->data?"True\n":"False\n");
+            printf(((cjson_boolean_t *)(json_object->data_p))->data?"True":"False");
         break;
         case CJSON_NUMBER:
             ((cjson_number_t *)(json_object->data_p))->type?
-            printf("float: %lf\n", ((cjson_number_t *)(json_object->data_p))->data.cjson_number_double):
-            printf("integer: %lld\n", ((cjson_number_t *)(json_object->data_p))->data.cjson_number_integer);
+            printf("float: %lf", ((cjson_number_t *)(json_object->data_p))->data.cjson_number_double):
+            printf("integer: %lld", ((cjson_number_t *)(json_object->data_p))->data.cjson_number_integer);
         break;
         case CJSON_NULL:
-            printf("null\n");
+            printf("null");
         break;
         case CJSON_STRING:
-            printf("string: %s\n", ((cjson_string_t *)(json_object->data_p))->data);
+            printf("string: %s", ((cjson_string_t *)(json_object->data_p))->data);
         break;
         case CJSON_SET:
             printf("set: \n");
             cjson_print_set(((cjson_set_t *)(json_object->data_p))->data->next, tab + 1);
         break;
-        default: ;
+        case CJSON_OBJECT:
+            printf("object: \n");
+            cjson_print_object(json_object->data_p, tab + 1);
+        break;
+        default: 
+            printf("type: %d", json_object->type);
     }
     return 0;
 }
