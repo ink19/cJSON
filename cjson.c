@@ -155,8 +155,34 @@ static cjson_return_code_t cjson_read_string(const char *json_string, int *json_
 
 static cjson_return_code_t cjson_read_set(const char *json_string, int *json_string_cursor, cjson_item_t *result) {
     cjson_return_code_t return_code;
+    cjson_item_t *set_head = (cjson_item_t *)malloc(sizeof(cjson_item_t));
+    cjson_item_t *temp_node;
     return_code = CJSON_OK;
+    result->data_p = set_head;
+    result->type = CJSON_SET;
+    set_head->next = NULL;
+    set_head->type = CJSON_HEAD;
     
+    while(1) {
+        //跳到下一个元素
+        ++(*json_string_cursor);
+        temp_node = (cjson_item_t *)malloc(sizeof(cjson_item_t));
+        if((return_code = cjson_read_begin(json_string, json_string_cursor, temp_node)) != CJSON_OK) {
+            break;
+        }
+        while(isspace(*(json_string + *json_string_cursor))) ++(*json_string_cursor);
+        temp_node->next = set_head->next;
+        set_head->next = temp_node;
+        if(*(json_string + *json_string_cursor) == ',') {        
+            continue;
+        } else if(*(json_string + *json_string_cursor) == ']') {
+            break;
+        } else {
+            return_code = CJSON_ERROR_FORMAT;
+            break;
+        }
+    }
+    return return_code;
 }
 
 static cjson_return_code_t cjson_read_object(const char *json_string, int *json_string_cursor, cjson_item_t *result);

@@ -16,7 +16,8 @@ enum cjson_type {
     CJSON_BOOLEAN,
     CJSON_SET,
     CJSON_OBJECT,
-    CJSON_NULL
+    CJSON_NULL,
+    CJSON_HEAD
 };
 
 typedef enum cjson_return_code_t{
