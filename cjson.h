@@ -57,14 +57,12 @@ typedef struct {
 //数组
 typedef struct {
     cjson_item_t *data;
-    int length;
 } cjson_set_t;
 
 //对象
 typedef struct {
     cjson_item_t *key;
     cjson_item_t *value;
-    int length;
 } cjson_object_t;
 
 extern int cjson_decode(const char *json_string, cjson_item_t *json_object);

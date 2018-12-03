@@ -159,9 +159,12 @@ static cjson_return_code_t cjson_read_set(const char *json_string, int *json_str
     cjson_return_code_t return_code;
     cjson_item_t *set_head = (cjson_item_t *)malloc(sizeof(cjson_item_t));
     cjson_item_t *temp_node;
-    return_code = CJSON_OK;
-    result->data_p = set_head;
+    cjson_set_t *set_object = (cjson_set_t *)malloc(sizeof(cjson_set_t));
+    result->data_p = (void *)set_object;
     result->type = CJSON_SET;
+    
+    set_object->data = set_head;
+    return_code = CJSON_OK;
     set_head->next = NULL;
     set_head->type = CJSON_HEAD;
     
@@ -189,8 +192,10 @@ static cjson_return_code_t cjson_read_set(const char *json_string, int *json_str
 }
 
 static cjson_return_code_t cjson_read_object(const char *json_string, int *json_string_cursor, cjson_item_t *result) {
-    cjson_return_code_t return_code;
-
+    cjson_return_code_t return_code = CJSON_OK;
+    cjson_item_t *key_head = (cjson_item_t *)malloc(sizeof(cjson_item_t));
+    cjson_item_t *value_head = (cjson_item_t *) malloc(sizeof(cjson_item_t));
+    
 }
 
 static cjson_return_code_t cjson_read_begin(const char *json_string, int *json_string_cursor, cjson_item_t* result) {
@@ -245,7 +250,7 @@ extern int cjson_print_data(cjson_item_t *json_object, int tab) {
         break;
         case CJSON_SET:
             printf("set: \n");
-            cjson_print_set(((cjson_set_t *)(json_object))->data->next, tab + 1);
+            cjson_print_set(((cjson_set_t *)(json_object->data_p))->data->next, tab + 1);
         break;
         default: ;
     }
