@@ -178,6 +178,7 @@ static cjson_return_code_t cjson_read_set(const char *json_string, int *json_str
         if(*(json_string + *json_string_cursor) == ',') {        
             continue;
         } else if(*(json_string + *json_string_cursor) == ']') {
+            ++(*json_string_cursor);
             break;
         } else {
             return_code = CJSON_ERROR_FORMAT;
@@ -188,7 +189,8 @@ static cjson_return_code_t cjson_read_set(const char *json_string, int *json_str
 }
 
 static cjson_return_code_t cjson_read_object(const char *json_string, int *json_string_cursor, cjson_item_t *result) {
-
+    cjson_return_code_t return_code;
+    
 }
 
 static cjson_return_code_t cjson_read_begin(const char *json_string, int *json_string_cursor, cjson_item_t* result) {
