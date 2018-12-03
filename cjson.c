@@ -34,13 +34,14 @@ static cjson_return_code_t cjson_read_number(const char *json_string, int *json_
         break;
     }
 
-    //--(*json_string_cursor);
+    --(*json_string_cursor);
     //负数处理
     if(is_negative) data_integer = -data_integer;
     //浮点数处理
-    if(data_dot) {
+    if(data_p->type) {
         data_dot = pow(10, data_dot);
         data_p->data.cjson_number_double = data_integer/(double)data_dot;
+        //printf("%lf\n", data_p->data.cjson_number_double);
     } else {
         data_p->data.cjson_number_integer = data_integer;
     }
@@ -51,7 +52,7 @@ static cjson_return_code_t cjson_read_number(const char *json_string, int *json_
 }
 
 static cjson_return_code_t cjson_read_boolean(const char *json_string, int *json_string_cursor, cjson_item_t *result){
-    cjson_boolean_t *data_p = (cjson_number_t *)malloc(sizeof(cjson_number_t));
+    cjson_boolean_t *data_p = (cjson_boolean_t *)malloc(sizeof(cjson_boolean_t));
     int error_code = 0;
 
     //判断为true或者false
@@ -125,7 +126,7 @@ static cjson_return_code_t cjson_read_string_escape(char *string_unescape) {
 }
 
 static cjson_return_code_t cjson_read_string(const char *json_string, int *json_string_cursor, cjson_item_t *result) {
-    int string_length;
+    int string_length = 0;
     cjson_string_t *data_p = (cjson_string_t *) malloc(sizeof(cjson_string_t));
     char *temp_string;
     ++(*json_string_cursor);
@@ -137,10 +138,11 @@ static cjson_return_code_t cjson_read_string(const char *json_string, int *json_
         string_length++;
     }
     //将光标移到字符串以外
-    *json_string_cursor += string_length + 1;
+    
     
     temp_string = (char *)malloc(sizeof(char) * (string_length + 1));
     memcpy(temp_string, json_string + *json_string_cursor, sizeof(char) * string_length);
+    *json_string_cursor += string_length + 1;
     temp_string[string_length] = 0;
 
     //转义字符串
@@ -185,7 +187,9 @@ static cjson_return_code_t cjson_read_set(const char *json_string, int *json_str
     return return_code;
 }
 
-static cjson_return_code_t cjson_read_object(const char *json_string, int *json_string_cursor, cjson_item_t *result);
+static cjson_return_code_t cjson_read_object(const char *json_string, int *json_string_cursor, cjson_item_t *result) {
+
+}
 
 static cjson_return_code_t cjson_read_begin(const char *json_string, int *json_string_cursor, cjson_item_t* result) {
     cjson_return_code_t return_code;
@@ -206,5 +210,42 @@ static cjson_return_code_t cjson_read_begin(const char *json_string, int *json_s
 }
 
 extern int cjson_decode(const char *json_string, cjson_item_t *json_object) {
-
+    int json_string_cursor = 0;
+    return cjson_read_begin(json_string, &json_string_cursor, json_object);
 } 
+
+static int cjson_print_set(cjson_item_t *json_object, int tab) {
+    int loop_i;
+    while(json_object!= NULL) {
+        for(loop_i = 0; loop_i < tab; ++loop_i) printf("  ");
+        cjson_print_data(json_object, tab);
+        json_object = json_object->next;
+    }
+    return 0;
+}
+
+extern int cjson_print_data(cjson_item_t *json_object, int tab) {
+    switch(json_object->type) {
+        case CJSON_BOOLEAN:
+            printf("boolean: ");
+            printf(((cjson_boolean_t *)(json_object->data_p))->data?"True\n":"False\n");
+        break;
+        case CJSON_NUMBER:
+            ((cjson_number_t *)(json_object->data_p))->type?
+            printf("float: %lf\n", ((cjson_number_t *)(json_object->data_p))->data.cjson_number_double):
+            printf("float: %lld\n", ((cjson_number_t *)(json_object->data_p))->data.cjson_number_integer);
+        break;
+        case CJSON_NULL:
+            printf("null\n");
+        break;
+        case CJSON_STRING:
+            printf("string: %s\n", ((cjson_string_t *)(json_object->data_p))->data);
+        break;
+        case CJSON_SET:
+            printf("set: \n");
+            cjson_print_set(((cjson_set_t *)(json_object))->data->next, tab + 1);
+        break;
+        default: ;
+    }
+    return 0;
+}
