@@ -190,7 +190,7 @@ static cjson_return_code_t cjson_read_set(const char *json_string, int *json_str
 
 static cjson_return_code_t cjson_read_object(const char *json_string, int *json_string_cursor, cjson_item_t *result) {
     cjson_return_code_t return_code;
-    
+
 }
 
 static cjson_return_code_t cjson_read_begin(const char *json_string, int *json_string_cursor, cjson_item_t* result) {
@@ -235,7 +235,7 @@ extern int cjson_print_data(cjson_item_t *json_object, int tab) {
         case CJSON_NUMBER:
             ((cjson_number_t *)(json_object->data_p))->type?
             printf("float: %lf\n", ((cjson_number_t *)(json_object->data_p))->data.cjson_number_double):
-            printf("float: %lld\n", ((cjson_number_t *)(json_object->data_p))->data.cjson_number_integer);
+            printf("integer: %lld\n", ((cjson_number_t *)(json_object->data_p))->data.cjson_number_integer);
         break;
         case CJSON_NULL:
             printf("null\n");
