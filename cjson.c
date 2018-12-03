@@ -333,3 +333,35 @@ extern int cjson_print_data(cjson_item_t *json_object, int tab) {
     }
     return 0;
 }
+
+static int cjson_set_destroy(cjson_set_t *json_set) {
+
+}
+
+static int cjson_object_destroy(cjson_object_t *json_object) {
+
+}
+
+extern int cjson_destroy(cjson_item_t *json_object) {
+    switch(json_object->type) {
+        case CJSON_BOOLEAN:
+            free(json_object->data_p);
+        break;
+        case CJSON_NUMBER:
+            free(json_object->data_p);
+        break;
+        case CJSON_STRING:
+            free(((cjson_string_t *) (json_object->data_p))->data);
+            free(json_object->data_p);
+        break;
+        case CJSON_SET:
+            cjson_set_destroy((cjson_set_t *)(json_object->data_p));
+            free(json_object->data_p);
+        break;
+        case CJSON_OBJECT:
+            cjson_object_destroy((cjson_object_t *)(json_object->data_p));
+            free(json_object->data_p);
+        break;
+    }
+    return 0;
+}

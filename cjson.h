@@ -67,6 +67,7 @@ typedef struct {
 
 extern int cjson_decode(const char *json_string, cjson_item_t *json_object);
 extern int cjson_print_data(cjson_item_t *json_object, int tab);
+extern int cjson_destroy(cjson_item_t *json_object);
 
 #ifdef __cplusplus
 }
