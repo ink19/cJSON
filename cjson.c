@@ -240,6 +240,7 @@ static cjson_return_code_t cjson_read_object(const char *json_string, int *json_
         //判断下一个字符是否为,
         while(isspace(*(json_string + *json_string_cursor))) ++(*json_string_cursor);
         if(*(json_string + *json_string_cursor) == ',') {
+            ++(*json_string_cursor);
             continue;
         }
         if(*(json_string + *json_string_cursor) == '}') {
@@ -335,11 +336,32 @@ extern int cjson_print_data(cjson_item_t *json_object, int tab) {
 }
 
 static int cjson_set_destroy(cjson_set_t *json_set) {
-
+    cjson_item_t *temp_item;
+    while(json_set->data != NULL) {
+        temp_item = json_set->data;
+        json_set->data = temp_item->next;
+        cjson_destroy(temp_item);
+        free(temp_item);
+    }
+    return 0;
 }
 
 static int cjson_object_destroy(cjson_object_t *json_object) {
+    cjson_item_t *temp_item;
+    while(json_object->value != NULL) {
+        temp_item = json_object->value;
+        json_object->value = temp_item->next;
+        cjson_destroy(temp_item);
+        free(temp_item);
+    }
 
+    while(json_object->key != NULL) {
+        temp_item = json_object->key;
+        json_object->key = temp_item->next;
+        cjson_destroy(temp_item);
+        free(temp_item);
+    }
+    return 0;
 }
 
 extern int cjson_destroy(cjson_item_t *json_object) {

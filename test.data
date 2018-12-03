@@ -1,3 +1,18 @@
 {
-    "[123, 124, \"asdgfa\", [ 1241245], 1241]" : [123, 124, "1241", [ 1241245], 1241]
+    "test": "stest",
+    "testfaf": "test",
+    "tests" : {
+        "twet": "teast",
+        "array": [
+            {
+                "test": "asdfga",
+                "asfda": 121414
+            },
+            123.123,
+            null,
+            true,
+            false
+        ]
+    },
+    "testfaf": "test"
 }

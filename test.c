@@ -11,5 +11,7 @@ int main() {
     fread(data, sizeof(char), 1024, file_p);
     cjson_decode(data, &rdata);
     cjson_print_data(&rdata, 0);
+    cjson_destroy(&rdata);
+    fclose(file_p);
     return 0;
 }
