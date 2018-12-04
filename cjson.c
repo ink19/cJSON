@@ -326,7 +326,7 @@ extern int cjson_print_data(cjson_item_t *json_object, int tab) {
             cjson_print_set(((cjson_set_t *)(json_object->data_p))->data->next, tab + 1);
         break;
         case CJSON_MAP:
-            printf("object: \n");
+            printf("map: \n");
             cjson_print_map(json_object->data_p, tab + 1);
         break;
         default: 
@@ -346,7 +346,7 @@ static int cjson_set_destroy(cjson_set_t *json_set) {
     return 0;
 }
 
-static int cjson_object_destroy(cjson_map_t *json_map) {
+static int cjson_map_destroy(cjson_map_t *json_map) {
     cjson_item_t *temp_item;
     while(json_map->value != NULL) {
         temp_item = json_map->value;
