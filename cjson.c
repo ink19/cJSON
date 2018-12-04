@@ -191,22 +191,22 @@ static cjson_return_code_t cjson_read_set(const char *json_string, int *json_str
     return return_code;
 }
 
-static cjson_return_code_t cjson_read_object(const char *json_string, int *json_string_cursor, cjson_item_t *result) {
+static cjson_return_code_t cjson_read_map(const char *json_string, int *json_string_cursor, cjson_item_t *result) {
     cjson_return_code_t return_code = CJSON_OK;
     cjson_item_t *temp_item;
-    // 初始化object的类型
+    // 初始化map的类型
     cjson_item_t *key_head = (cjson_item_t *)malloc(sizeof(cjson_item_t));
     cjson_item_t *value_head = (cjson_item_t *) malloc(sizeof(cjson_item_t));
-    cjson_object_t *object_object = (cjson_object_t *)malloc(sizeof(cjson_object_t));
-    object_object->key = key_head;
-    object_object->value = value_head;
+    cjson_map_t *map_object = (cjson_map_t *)malloc(sizeof(cjson_map_t));
+    map_object->key = key_head;
+    map_object->value = value_head;
     key_head->type = CJSON_HEAD;
     value_head->type = CJSON_HEAD;
     key_head->next = NULL;
     value_head->next = NULL;
     //返回结果
-    result->type = CJSON_OBJECT;
-    result->data_p = (void *) object_object;
+    result->type = CJSON_MAP;
+    result->data_p = (void *) map_object;
 
     //跳过object的开始{
     ++(*json_string_cursor);
@@ -266,7 +266,7 @@ static cjson_return_code_t cjson_read_begin(const char *json_string, int *json_s
         case 't':
         case 'f': return_code = cjson_read_boolean(json_string, json_string_cursor, result); break;
         case '[': return_code = cjson_read_set(json_string, json_string_cursor, result); break;
-        case '{': return_code = cjson_read_object(json_string, json_string_cursor, result); break;
+        case '{': return_code = cjson_read_map(json_string, json_string_cursor, result); break;
         default : return_code = cjson_read_number(json_string, json_string_cursor, result); break;
     }
     return return_code;
@@ -288,10 +288,10 @@ static int cjson_print_set(cjson_item_t *json_object, int tab) {
     return 0;
 }
 
-static int cjson_print_object(cjson_object_t *json_object, int tab) {
+static int cjson_print_map(cjson_map_t *json_map, int tab) {
     int loop_i;
-    cjson_item_t *key_head = json_object->key->next;
-    cjson_item_t *value_head = json_object->value->next;
+    cjson_item_t *key_head = json_map->key->next;
+    cjson_item_t *value_head = json_map->value->next;
     while(key_head != NULL) {
         for(loop_i = 0; loop_i < tab; ++loop_i) printf("  ");
         cjson_print_data(key_head, tab);
@@ -325,9 +325,9 @@ extern int cjson_print_data(cjson_item_t *json_object, int tab) {
             printf("set: \n");
             cjson_print_set(((cjson_set_t *)(json_object->data_p))->data->next, tab + 1);
         break;
-        case CJSON_OBJECT:
+        case CJSON_MAP:
             printf("object: \n");
-            cjson_print_object(json_object->data_p, tab + 1);
+            cjson_print_map(json_object->data_p, tab + 1);
         break;
         default: 
             printf("type: %d", json_object->type);
@@ -346,18 +346,18 @@ static int cjson_set_destroy(cjson_set_t *json_set) {
     return 0;
 }
 
-static int cjson_object_destroy(cjson_object_t *json_object) {
+static int cjson_object_destroy(cjson_map_t *json_map) {
     cjson_item_t *temp_item;
-    while(json_object->value != NULL) {
-        temp_item = json_object->value;
-        json_object->value = temp_item->next;
+    while(json_map->value != NULL) {
+        temp_item = json_map->value;
+        json_map->value = temp_item->next;
         cjson_destroy(temp_item);
         free(temp_item);
     }
 
-    while(json_object->key != NULL) {
-        temp_item = json_object->key;
-        json_object->key = temp_item->next;
+    while(json_map->key != NULL) {
+        temp_item = json_map->key;
+        json_map->key = temp_item->next;
         cjson_destroy(temp_item);
         free(temp_item);
     }
@@ -380,8 +380,8 @@ extern int cjson_destroy(cjson_item_t *json_object) {
             cjson_set_destroy((cjson_set_t *)(json_object->data_p));
             free(json_object->data_p);
         break;
-        case CJSON_OBJECT:
-            cjson_object_destroy((cjson_object_t *)(json_object->data_p));
+        case CJSON_MAP:
+            cjson_map_destroy((cjson_map_t *)(json_object->data_p));
             free(json_object->data_p);
         break;
     }

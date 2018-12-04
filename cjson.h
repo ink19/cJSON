@@ -16,7 +16,7 @@ enum cjson_type {
     CJSON_STRING,
     CJSON_BOOLEAN,
     CJSON_SET,
-    CJSON_OBJECT,
+    CJSON_MAP,
     CJSON_NULL,
     CJSON_HEAD
 };
@@ -63,7 +63,7 @@ typedef struct {
 typedef struct {
     cjson_item_t *key;
     cjson_item_t *value;
-} cjson_object_t;
+} cjson_map_t;
 
 extern int cjson_decode(const char *json_string, cjson_item_t *json_object);
 extern int cjson_print_data(cjson_item_t *json_object, int tab);
