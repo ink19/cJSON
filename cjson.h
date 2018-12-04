@@ -65,6 +65,13 @@ typedef struct {
     cjson_item_t *value;
 } cjson_map_t;
 
+//对象元素
+typedef struct _cjson_map_item_t {
+    cjson_item_t *key;
+    cjson_item_t *value;
+    struct _cjson_map_item_t *next;
+} cjson_map_item_t;
+
 extern int cjson_decode(const char *json_string, cjson_item_t *json_object);
 extern int cjson_print_data(cjson_item_t *json_object, int tab);
 extern int cjson_destroy(cjson_item_t *json_object);
