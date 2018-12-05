@@ -222,9 +222,9 @@ static cjson_return_code_t cjson_read_map(const char *json_string, int *json_str
             return_code = CJSON_ERROR_FORMAT;
             break;
         }
-        temp_item->next = key_head->next;
         key_head->next = temp_item;
-        
+        temp_item->next = NULL;
+        key_head = temp_item;
         //判断下一个字符是否为:
         while(isspace(*(json_string + *json_string_cursor))) ++(*json_string_cursor);
         if(*(json_string + *json_string_cursor) != ':') {
@@ -237,8 +237,10 @@ static cjson_return_code_t cjson_read_map(const char *json_string, int *json_str
         //获取value
         temp_item = (cjson_item_t *) malloc(sizeof(cjson_item_t));
         cjson_read_begin(json_string, json_string_cursor, temp_item);
-        temp_item->next = value_head->next;
+        
         value_head->next = temp_item;
+        temp_item->next = NULL;
+        value_head = temp_item;
 
         //判断下一个字符是否为,
         while(isspace(*(json_string + *json_string_cursor))) ++(*json_string_cursor);
