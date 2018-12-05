@@ -198,15 +198,11 @@ static cjson_return_code_t cjson_read_map(const char *json_string, int *json_str
     cjson_return_code_t return_code = CJSON_OK;
     cjson_item_t *temp_item;
     // 初始化map的类型
-    cjson_item_t *key_head = (cjson_item_t *)malloc(sizeof(cjson_item_t));
-    cjson_item_t *value_head = (cjson_item_t *) malloc(sizeof(cjson_item_t));
     cjson_map_t *map_object = (cjson_map_t *)malloc(sizeof(cjson_map_t));
-    map_object->key = key_head;
-    map_object->value = value_head;
-    key_head->type = CJSON_HEAD;
-    value_head->type = CJSON_HEAD;
-    key_head->next = NULL;
-    value_head->next = NULL;
+    cjson_map_item_t *map_head = (cjson_map_item_t *)malloc(sizeof(cjson_map_item_t));
+    cjson_map_item_t *map_item_temp;
+    map_object->data = map_head;
+    map_head->next = NULL;
     //返回结果
     result->type = CJSON_MAP;
     result->data_p = (void *) map_object;
@@ -216,15 +212,14 @@ static cjson_return_code_t cjson_read_map(const char *json_string, int *json_str
     while(1) {
         //获取key，key只能为STRING类型
         temp_item = (cjson_item_t *)malloc(sizeof(cjson_item_t));
+        map_item_temp = (cjson_map_item_t *)malloc(sizeof(cjson_map_item_t));
+        map_item_temp->key = temp_item;
         cjson_read_begin(json_string, json_string_cursor, temp_item);
         if(temp_item->type != CJSON_STRING) {
             printf("error: key is not string %d\n", temp_item->type);
             return_code = CJSON_ERROR_FORMAT;
             break;
         }
-        key_head->next = temp_item;
-        temp_item->next = NULL;
-        key_head = temp_item;
         //判断下一个字符是否为:
         while(isspace(*(json_string + *json_string_cursor))) ++(*json_string_cursor);
         if(*(json_string + *json_string_cursor) != ':') {
@@ -237,10 +232,11 @@ static cjson_return_code_t cjson_read_map(const char *json_string, int *json_str
         //获取value
         temp_item = (cjson_item_t *) malloc(sizeof(cjson_item_t));
         cjson_read_begin(json_string, json_string_cursor, temp_item);
-        
-        value_head->next = temp_item;
-        temp_item->next = NULL;
-        value_head = temp_item;
+        map_item_temp->value = temp_item;
+
+        map_head->next = map_item_temp;
+        map_item_temp->next = NULL;
+        map_head = map_item_temp;
 
         //判断下一个字符是否为,
         while(isspace(*(json_string + *json_string_cursor))) ++(*json_string_cursor);
@@ -295,16 +291,16 @@ static int cjson_print_set(cjson_item_t *json_object, int tab) {
 
 static int cjson_print_map(cjson_map_t *json_map, int tab) {
     int loop_i;
-    cjson_item_t *key_head = json_map->key->next;
-    cjson_item_t *value_head = json_map->value->next;
-    while(key_head != NULL) {
+    //cjson_item_t *key_head = json_map->key->next;
+    //cjson_item_t *value_head = json_map->value->next;
+    cjson_map_item_t *map_head = json_map->data->next;
+    while(map_head != NULL) {
         for(loop_i = 0; loop_i < tab; ++loop_i) printf("  ");
-        cjson_print_data(key_head, tab);
+        cjson_print_data(map_head->key, tab);
         printf(" -> ");
-        cjson_print_data(value_head, tab);
+        cjson_print_data(map_head->value, tab);
         printf("\n");
-        key_head = key_head->next;
-        value_head = value_head->next;
+        map_head = map_head->next;
     }
     return 0;
 }
@@ -352,18 +348,19 @@ static int cjson_set_destroy(cjson_set_t *json_set) {
 }
 
 static int cjson_map_destroy(cjson_map_t *json_map) {
-    cjson_item_t *temp_item;
-    while(json_map->value != NULL) {
-        temp_item = json_map->value;
-        json_map->value = temp_item->next;
-        cjson_destroy(temp_item);
-        free(temp_item);
-    }
+    cjson_map_item_t *temp_item;
+    //清除头
+    temp_item = json_map->data;
+    json_map->data = temp_item->next;
+    free(temp_item);
 
-    while(json_map->key != NULL) {
-        temp_item = json_map->key;
-        json_map->key = temp_item->next;
-        cjson_destroy(temp_item);
+    while(json_map->data != NULL) {
+        temp_item = json_map->data;
+        json_map->data = temp_item->next;
+        cjson_destroy(temp_item->key);
+        cjson_destroy(temp_item->value);
+        free(temp_item->key);
+        free(temp_item->value);
         free(temp_item);
     }
     return 0;
