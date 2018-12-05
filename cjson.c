@@ -3,6 +3,8 @@
 static cjson_return_code_t cjson_malloc(void **data_p, size_t data_size) {
     if(NULL == (*data_p = malloc(data_size))) {
         return CJSON_ERROR_MALLOC;
+    } else {
+        return CJSON_OK;
     }
 }
 
@@ -10,7 +12,11 @@ static cjson_return_code_t cjson_read_begin(const char *json_string, int *json_s
 
 static cjson_return_code_t cjson_read_number(const char *json_string, int *json_string_cursor, cjson_item_t *result) {
     result->type = CJSON_PLACEHOLDER;
-    cjson_number_t *data_p = (cjson_number_t *)malloc(sizeof(cjson_number_t));
+    cjson_return_code_t return_code;
+    cjson_number_t *data_p;
+    if(CJSON_OK != (return_code = cjson_malloc((void **)&data_p, sizeof(cjson_number_t)))) {
+        return return_code;
+    }
     char temp_c;
     long long data_integer = 0;
     int data_dot = 0;
@@ -63,7 +69,11 @@ static cjson_return_code_t cjson_read_number(const char *json_string, int *json_
 
 static cjson_return_code_t cjson_read_boolean(const char *json_string, int *json_string_cursor, cjson_item_t *result){
     result->type = CJSON_PLACEHOLDER;
-    cjson_boolean_t *data_p = (cjson_boolean_t *)malloc(sizeof(cjson_boolean_t));
+    cjson_return_code_t return_code;
+    cjson_boolean_t *data_p;
+    if(CJSON_OK != (return_code = cjson_malloc((void **)&data_p, sizeof(cjson_boolean_t)))) {
+        return return_code;
+    }
     int error_code = 0;
 
     //判断为true或者false
@@ -140,8 +150,13 @@ static cjson_return_code_t cjson_read_string_escape(char *string_unescape) {
 static cjson_return_code_t cjson_read_string(const char *json_string, int *json_string_cursor, cjson_item_t *result) {
     result->type = CJSON_PLACEHOLDER;
     int string_length = 0;
-    cjson_string_t *data_p = (cjson_string_t *) malloc(sizeof(cjson_string_t));
+    cjson_return_code_t return_code;
+    cjson_string_t *data_p;
     char *temp_string;
+    if(CJSON_OK != (return_code = cjson_malloc((void **)&data_p, sizeof(cjson_string_t)))) {
+        return return_code;
+    }
+    
     ++(*json_string_cursor);
     //寻找结尾
     while(*(string_length + json_string + *json_string_cursor) != '"' && *(string_length + json_string + *json_string_cursor) != 0) {
@@ -160,7 +175,11 @@ static cjson_return_code_t cjson_read_string(const char *json_string, int *json_
 
     //将光标移到字符串以外
     
-    temp_string = (char *)malloc(sizeof(char) * (string_length + 1));
+    //temp_string = (char *)malloc(sizeof(char) * (string_length + 1));
+    if(CJSON_OK != (return_code = cjson_malloc((void **)&temp_string, sizeof(char) * (string_length + 1)))) {
+        return return_code;
+    }
+
     memcpy(temp_string, json_string + *json_string_cursor, sizeof(char) * string_length);
     *json_string_cursor += string_length + 1;
     temp_string[string_length] = 0;
@@ -177,9 +196,18 @@ static cjson_return_code_t cjson_read_string(const char *json_string, int *json_
 
 static cjson_return_code_t cjson_read_set(const char *json_string, int *json_string_cursor, cjson_item_t *result) {
     cjson_return_code_t return_code;
-    cjson_item_t *set_head = (cjson_item_t *)malloc(sizeof(cjson_item_t));
+    cjson_item_t *set_head;
+    result->type = CJSON_PLACEHOLDER;
+    if(CJSON_OK != (return_code = cjson_malloc((void **)&set_head, sizeof(cjson_item_t)))) {
+        return return_code;
+    }
     cjson_item_t *temp_node;
-    cjson_set_t *set_object = (cjson_set_t *)malloc(sizeof(cjson_set_t));
+    cjson_set_t *set_object;
+    if(CJSON_OK != (return_code = cjson_malloc((void **)&set_object, sizeof(cjson_set_t)))) {
+        free(set_head);
+        return return_code;
+    }
+
     result->data_p = (void *)set_object;
     result->type = CJSON_SET;
     
@@ -191,7 +219,9 @@ static cjson_return_code_t cjson_read_set(const char *json_string, int *json_str
     while(1) {
         //跳到下一个元素
         ++(*json_string_cursor);
-        temp_node = (cjson_item_t *)malloc(sizeof(cjson_item_t));
+        if(CJSON_OK != (return_code = cjson_malloc((void **)&temp_node, sizeof(cjson_item_t)))) {
+            return return_code;
+        }
         if((return_code = cjson_read_begin(json_string, json_string_cursor, temp_node)) != CJSON_OK) {
             cjson_destroy(temp_node);
             free(temp_node);
@@ -220,8 +250,17 @@ static cjson_return_code_t cjson_read_map(const char *json_string, int *json_str
     cjson_return_code_t return_code = CJSON_OK;
     cjson_item_t *temp_item;
     // 初始化map的类型
-    cjson_map_t *map_object = (cjson_map_t *)malloc(sizeof(cjson_map_t));
-    cjson_map_item_t *map_head = (cjson_map_item_t *)malloc(sizeof(cjson_map_item_t));
+    cjson_map_t *map_object;
+    if(CJSON_OK != (return_code = cjson_malloc((void **)&map_object, sizeof(cjson_map_t)))) {
+        return return_code;
+    }
+
+    cjson_map_item_t *map_head;
+    if(CJSON_OK != (return_code = cjson_malloc((void **)&map_head, sizeof(cjson_map_item_t)))) {
+        free(map_object);
+        return return_code;
+    }
+
     cjson_map_item_t *map_item_temp;
     map_object->data = map_head;
     map_head->next = NULL;
@@ -233,8 +272,14 @@ static cjson_return_code_t cjson_read_map(const char *json_string, int *json_str
     ++(*json_string_cursor);
     while(1) {
         //获取key，key只能为STRING类型
-        temp_item = (cjson_item_t *)malloc(sizeof(cjson_item_t));
-        map_item_temp = (cjson_map_item_t *)malloc(sizeof(cjson_map_item_t));
+        if(CJSON_OK != (return_code = cjson_malloc((void **)&temp_item, sizeof(cjson_item_t)))) {
+            return return_code;
+        }
+        if(CJSON_OK != (return_code = cjson_malloc((void **)&map_item_temp, sizeof(cjson_map_item_t)))) {
+            free(temp_item);
+            return return_code;
+        }
+
         map_item_temp->key = temp_item;
         if(CJSON_OK != cjson_read_begin(json_string, json_string_cursor, temp_item)) {
             return_code = CJSON_ERROR_FORMAT;
@@ -264,7 +309,14 @@ static cjson_return_code_t cjson_read_map(const char *json_string, int *json_str
         ++(*json_string_cursor);
         
         //获取value
-        temp_item = (cjson_item_t *) malloc(sizeof(cjson_item_t));
+        if(CJSON_OK != (return_code = cjson_malloc((void **)&temp_item, sizeof(cjson_item_t)))) {
+            cjson_destroy(map_item_temp->key);
+            free(map_item_temp->key);
+            free(map_item_temp);
+
+            return return_code;
+        }
+
         if(CJSON_OK != cjson_read_begin(json_string, json_string_cursor, temp_item)) {
             cjson_destroy(map_item_temp->key);
             cjson_destroy(temp_item);
