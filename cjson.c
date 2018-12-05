@@ -3,6 +3,7 @@
 static cjson_return_code_t cjson_read_begin(const char *json_string, int *json_string_cursor, cjson_item_t *result);
 
 static cjson_return_code_t cjson_read_number(const char *json_string, int *json_string_cursor, cjson_item_t *result) {
+    result->type = CJSON_PLACEHOLDER;
     cjson_number_t *data_p = (cjson_number_t *)malloc(sizeof(cjson_number_t));
     char temp_c;
     long long data_integer = 0;
@@ -13,7 +14,10 @@ static cjson_return_code_t cjson_read_number(const char *json_string, int *json_
         is_negative = 1;
         ++(*json_string_cursor);
     }  
-
+    if(*(*json_string_cursor + json_string) < '0' || *(*json_string_cursor + json_string) > '9') {
+        free(data_p);
+        return CJSON_ERROR_FORMAT;
+    }
     data_p->type = 0;
     while(1) {
         //暂存字符
@@ -52,6 +56,7 @@ static cjson_return_code_t cjson_read_number(const char *json_string, int *json_
 }
 
 static cjson_return_code_t cjson_read_boolean(const char *json_string, int *json_string_cursor, cjson_item_t *result){
+    result->type = CJSON_PLACEHOLDER;
     cjson_boolean_t *data_p = (cjson_boolean_t *)malloc(sizeof(cjson_boolean_t));
     int error_code = 0;
 
@@ -85,6 +90,7 @@ static cjson_return_code_t cjson_read_boolean(const char *json_string, int *json
 }
 
 static cjson_return_code_t cjson_read_null(const char *json_string, int *json_string_cursor, cjson_item_t *result) {
+    result->type = CJSON_PLACEHOLDER;
     //验证正确
     if(!memcmp(json_string + *json_string_cursor, "null", 4 * sizeof(char))) {
         result->type = CJSON_NULL;
@@ -126,19 +132,27 @@ static cjson_return_code_t cjson_read_string_escape(char *string_unescape) {
 }
 
 static cjson_return_code_t cjson_read_string(const char *json_string, int *json_string_cursor, cjson_item_t *result) {
+    result->type = CJSON_PLACEHOLDER;
     int string_length = 0;
     cjson_string_t *data_p = (cjson_string_t *) malloc(sizeof(cjson_string_t));
     char *temp_string;
     ++(*json_string_cursor);
     //寻找结尾
-    while(*(string_length + json_string + *json_string_cursor) != '"') {
+    while(*(string_length + json_string + *json_string_cursor) != '"' && *(string_length + json_string + *json_string_cursor) != 0) {
         if(*(string_length + json_string + *json_string_cursor) == '\\') {
             string_length++;
         }
         string_length++;
     }
-    //将光标移到字符串以外
     
+    //发生未期待的字符终止
+    if(0 == *(string_length + json_string + *json_string_cursor)) {
+        *json_string_cursor += string_length;
+        free(data_p);
+        return CJSON_ERROR_FORMAT;
+    }
+
+    //将光标移到字符串以外
     
     temp_string = (char *)malloc(sizeof(char) * (string_length + 1));
     memcpy(temp_string, json_string + *json_string_cursor, sizeof(char) * string_length);
@@ -173,6 +187,8 @@ static cjson_return_code_t cjson_read_set(const char *json_string, int *json_str
         ++(*json_string_cursor);
         temp_node = (cjson_item_t *)malloc(sizeof(cjson_item_t));
         if((return_code = cjson_read_begin(json_string, json_string_cursor, temp_node)) != CJSON_OK) {
+            cjson_destroy(temp_node);
+            free(temp_node);
             break;
         }
         while(isspace(*(json_string + *json_string_cursor))) ++(*json_string_cursor);
@@ -214,24 +230,45 @@ static cjson_return_code_t cjson_read_map(const char *json_string, int *json_str
         temp_item = (cjson_item_t *)malloc(sizeof(cjson_item_t));
         map_item_temp = (cjson_map_item_t *)malloc(sizeof(cjson_map_item_t));
         map_item_temp->key = temp_item;
-        cjson_read_begin(json_string, json_string_cursor, temp_item);
-        if(temp_item->type != CJSON_STRING) {
-            printf("error: key is not string %d\n", temp_item->type);
+        if(CJSON_OK != cjson_read_begin(json_string, json_string_cursor, temp_item)) {
             return_code = CJSON_ERROR_FORMAT;
+            cjson_destroy(temp_item);
+            free(temp_item);
+            free(map_item_temp);
+            break;
+        }
+        if(temp_item->type != CJSON_STRING) {
+            //printf("error: key is not string %d\n", temp_item->type);
+            return_code = CJSON_ERROR_FORMAT;
+            cjson_destroy(temp_item);
+            free(temp_item);
+            free(map_item_temp);
             break;
         }
         //判断下一个字符是否为:
         while(isspace(*(json_string + *json_string_cursor))) ++(*json_string_cursor);
         if(*(json_string + *json_string_cursor) != ':') {
             return_code = CJSON_ERROR_FORMAT;
-            printf("error: %d\n", temp_item->type);
+            //printf("error: %d\n", temp_item->type);
+            cjson_destroy(temp_item);
+            free(temp_item);
+            free(map_item_temp);
             break;
         }
         ++(*json_string_cursor);
         
         //获取value
         temp_item = (cjson_item_t *) malloc(sizeof(cjson_item_t));
-        cjson_read_begin(json_string, json_string_cursor, temp_item);
+        if(CJSON_OK != cjson_read_begin(json_string, json_string_cursor, temp_item)) {
+            cjson_destroy(map_item_temp->key);
+            cjson_destroy(temp_item);
+            free(temp_item);
+            free(map_item_temp->key);
+            free(map_item_temp);
+            return_code = CJSON_ERROR_FORMAT;
+            break;
+        }
+        
         map_item_temp->value = temp_item;
 
         map_head->next = map_item_temp;
@@ -273,9 +310,30 @@ static cjson_return_code_t cjson_read_begin(const char *json_string, int *json_s
     return return_code;
 }
 
-extern int cjson_decode(const char *json_string, cjson_item_t *json_object) {
+extern int cjson_decode_set_error(const char *json_string, int error_site, cjson_err_t *err_data) {
+    int line = 1, word_in_line = 0, loop_i;
+    err_data->word = error_site;
+    for(loop_i = 0; loop_i < error_site; ++loop_i) {
+        if(*(json_string + loop_i) == '\n') {
+            word_in_line = 0;
+            line++;
+        }
+        word_in_line++;
+    }
+    err_data->line = line;
+    err_data->word_in_line = word_in_line;
+    return 0;
+}
+
+extern int cjson_decode(const char *json_string, cjson_item_t *json_object, cjson_err_t *err_data) {
     int json_string_cursor = 0;
-    return cjson_read_begin(json_string, &json_string_cursor, json_object);
+    cjson_return_code_t return_code;
+    return_code = cjson_read_begin(json_string, &json_string_cursor, json_object);
+    if(CJSON_OK != return_code) {
+        err_data->err_code = return_code;
+        cjson_decode_set_error(json_string, json_string_cursor, err_data);
+    }
+    return return_code;
 } 
 
 static int cjson_print_set(cjson_item_t *json_object, int tab) {

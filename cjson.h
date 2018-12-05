@@ -11,7 +11,10 @@ extern "C" {
 #include <ctype.h>
 #include <math.h>
 
+
+//所有非set和map的数据，都需要在一开始对item赋予CJSON_PLACEHOLDER，在确认成功返回后再修改为对应的类型，防止发生错误时对数据重复释放
 enum cjson_type {
+    CJSON_PLACEHOLDER, //防止释放未分配的内存
     CJSON_NUMBER,
     CJSON_STRING,
     CJSON_BOOLEAN,
@@ -71,7 +74,14 @@ typedef struct {
     cjson_map_item_t *data;
 } cjson_map_t;
 
-extern int cjson_decode(const char *json_string, cjson_item_t *json_object);
+typedef struct {
+    int line;
+    int word_in_line;
+    int word;
+    cjson_return_code_t err_code;
+} cjson_err_t;
+
+extern int cjson_decode(const char *json_string, cjson_item_t *json_object, cjson_err_t *err_data);
 extern int cjson_print_data(cjson_item_t *json_object, int tab);
 extern int cjson_destroy(cjson_item_t *json_object);
 
