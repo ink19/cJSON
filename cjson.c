@@ -1,5 +1,11 @@
 #include "cjson.h"
 
+static cjson_return_code_t cjson_malloc(void **data_p, size_t data_size) {
+    if(NULL == (*data_p = malloc(data_size))) {
+        return CJSON_ERROR_MALLOC;
+    }
+}
+
 static cjson_return_code_t cjson_read_begin(const char *json_string, int *json_string_cursor, cjson_item_t *result);
 
 static cjson_return_code_t cjson_read_number(const char *json_string, int *json_string_cursor, cjson_item_t *result) {

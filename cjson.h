@@ -26,7 +26,8 @@ enum cjson_type {
 
 typedef enum cjson_return_code_t{
     CJSON_OK,
-    CJSON_ERROR_FORMAT
+    CJSON_ERROR_FORMAT,
+    CJSON_ERROR_MALLOC
 } cjson_return_code_t;
 
 //基本类型的抽象
