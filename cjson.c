@@ -177,6 +177,7 @@ static cjson_return_code_t cjson_read_string(const char *json_string, int *json_
     
     //temp_string = (char *)malloc(sizeof(char) * (string_length + 1));
     if(CJSON_OK != (return_code = cjson_malloc((void **)&temp_string, sizeof(char) * (string_length + 1)))) {
+        free(data_p);
         return return_code;
     }
 
