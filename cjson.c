@@ -176,8 +176,11 @@ static cjson_return_code_t cjson_read_set(const char *json_string, int *json_str
             break;
         }
         while(isspace(*(json_string + *json_string_cursor))) ++(*json_string_cursor);
-        temp_node->next = set_head->next;
+        
         set_head->next = temp_node;
+        temp_node->next = NULL;
+        set_head = temp_node;
+
         if(*(json_string + *json_string_cursor) == ',') {        
             continue;
         } else if(*(json_string + *json_string_cursor) == ']') {
