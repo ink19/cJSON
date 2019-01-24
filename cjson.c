@@ -507,49 +507,56 @@ extern int cjson_destroy(cjson_item_t *json_object) {
     return 0;
 }
 
-extern long long cjson_get_integer(cjson_item_t *json_item) {
+extern int cjson_get_integer(cjson_item_t *json_item, long long *return_data) {
     cjson_number_t *number_p = NULL;
     if(cjson_get_item_type(json_item) == CJSON_NUMBER) {
         number_p = json_item->data_p;
         if(number_p->type == 0) {
-            return number_p->data.cjson_number_integer;
+            *return_data = number_p->data.cjson_number_integer;
+            return CJSON_OK;
         } else {
-            return (long long)(number_p->data.cjson_number_double);
+            *return_data = (long long)(number_p->data.cjson_number_double);
+            return CJSON_ERROR_TYPE_ERROR;
         }
     } else {
-        return 0;
+        return CJSON_ERROR_TYPE_ERROR;
     }
 }
 
-extern double cjson_get_double(cjson_item_t *json_item) {
+extern int cjson_get_double(cjson_item_t *json_item, double *return_data) {
     cjson_number_t *number_p = NULL;
     if(cjson_get_item_type(json_item) == CJSON_NUMBER) {
         number_p = json_item->data_p;
         if(number_p->type == 0) {
-            return number_p->data.cjson_number_integer;
+            *return_data = (double)(number_p->data.cjson_number_integer);
+            return CJSON_ERROR_TYPE_ERROR;
         } else {
-            return (number_p->data.cjson_number_double);
+            *return_data = (number_p->data.cjson_number_double);
+            return CJSON_OK;
         }
     } else {
-        return 0;
+        return CJSON_ERROR_TYPE_ERROR;
     }
 }
 
-extern char * cjson_get_string(cjson_item_t *json_item) {
+extern int cjson_get_string(cjson_item_t *json_item, char **return_data) {
     cjson_string_t *string_p;
     if(cjson_get_item_type(json_item) == CJSON_STRING) {
         string_p = (cjson_string_t *)(json_item->data_p);
-        return string_p->data;
-    } else return NULL;
+        *return_data =  string_p->data;
+        return CJSON_OK;
+    } else return CJSON_ERROR_TYPE_ERROR;
 }
 
-extern int cjson_get_boolean(cjson_item_t *json_item) {
+extern int cjson_get_boolean(cjson_item_t *json_item, int *return_data) {
     cjson_boolean_t *boolean_p;
     if(cjson_get_item_type(json_item) == CJSON_BOOLEAN) {
         boolean_p = (cjson_boolean_t *)(json_item->data_p);
-        return boolean_p->data;
+        *return_data = boolean_p->data;
+        return CJSON_OK;
     } else {
-        return 1;
+        *return_data = 1;
+        return CJSON_ERROR_TYPE_ERROR;
     }
 }
 extern int cjson_get_item_type(cjson_item_t *json_item) {

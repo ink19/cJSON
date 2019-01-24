@@ -86,10 +86,10 @@ typedef struct {
 extern int cjson_decode(const char *json_string, cjson_item_t *json_object, cjson_err_t *err_data);
 extern int cjson_print_data(cjson_item_t *json_object, int tab);
 extern int cjson_destroy(cjson_item_t *json_object);
-extern long long cjson_get_integer(cjson_item_t *json_item);
-extern double cjson_get_double(cjson_item_t *json_item);
-extern char * cjson_get_string(cjson_item_t *json_item);
-extern int cjson_get_boolean(cjson_item_t *json_item);
+extern int cjson_get_integer(cjson_item_t *json_item, long long *return_data);
+extern int cjson_get_double(cjson_item_t *json_item, double *return_data);
+extern int cjson_get_string(cjson_item_t *json_item, char ** return_data);
+extern int cjson_get_boolean(cjson_item_t *json_item, int *return_data);
 extern int cjson_get_item_type(cjson_item_t *json_item);
 
 #ifdef __cplusplus
