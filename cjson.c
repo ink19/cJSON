@@ -506,3 +506,52 @@ extern int cjson_destroy(cjson_item_t *json_object) {
     }
     return 0;
 }
+
+extern long long cjson_get_integer(cjson_item_t *json_item) {
+    cjson_number_t *number_p = NULL;
+    if(cjson_get_item_type(json_item) == CJSON_NUMBER) {
+        number_p = json_item->data_p;
+        if(number_p->type == 0) {
+            return number_p->data.cjson_number_integer;
+        } else {
+            return (long long)(number_p->data.cjson_number_double);
+        }
+    } else {
+        return 0;
+    }
+}
+
+extern double cjson_get_double(cjson_item_t *json_item) {
+    cjson_number_t *number_p = NULL;
+    if(cjson_get_item_type(json_item) == CJSON_NUMBER) {
+        number_p = json_item->data_p;
+        if(number_p->type == 0) {
+            return number_p->data.cjson_number_integer;
+        } else {
+            return (number_p->data.cjson_number_double);
+        }
+    } else {
+        return 0;
+    }
+}
+
+extern char * cjson_get_string(cjson_item_t *json_item) {
+    cjson_string_t *string_p;
+    if(cjson_get_item_type(json_item) == CJSON_STRING) {
+        string_p = (cjson_string_t *)(json_item->data_p);
+        return string_p->data;
+    } else return NULL;
+}
+
+extern int cjson_get_boolean(cjson_item_t *json_item) {
+    cjson_boolean_t *boolean_p;
+    if(cjson_get_item_type(json_item) == CJSON_BOOLEAN) {
+        boolean_p = (cjson_boolean_t *)(json_item->data_p);
+        return boolean_p->data;
+    } else {
+        return 1;
+    }
+}
+extern int cjson_get_item_type(cjson_item_t *json_item) {
+    return json_item->type;
+}

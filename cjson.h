@@ -27,7 +27,8 @@ enum cjson_type {
 typedef enum cjson_return_code_t{
     CJSON_OK,
     CJSON_ERROR_FORMAT,
-    CJSON_ERROR_MALLOC
+    CJSON_ERROR_MALLOC,
+    CJSON_ERROR_TYPE_ERROR
 } cjson_return_code_t;
 
 //基本类型的抽象
@@ -85,6 +86,11 @@ typedef struct {
 extern int cjson_decode(const char *json_string, cjson_item_t *json_object, cjson_err_t *err_data);
 extern int cjson_print_data(cjson_item_t *json_object, int tab);
 extern int cjson_destroy(cjson_item_t *json_object);
+extern long long cjson_get_integer(cjson_item_t *json_item);
+extern double cjson_get_double(cjson_item_t *json_item);
+extern char * cjson_get_string(cjson_item_t *json_item);
+extern int cjson_get_boolean(cjson_item_t *json_item);
+extern int cjson_get_item_type(cjson_item_t *json_item);
 
 #ifdef __cplusplus
 }
